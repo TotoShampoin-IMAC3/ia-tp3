@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import * as base from "./base";
-import HyperScene from "../HyperScene";
+import HyperScene from "../Modules/HyperModules/HyperScene";
 
 /**
  *
