@@ -1,37 +1,64 @@
 import * as THREE from "three";
-import * as base from "./base";
-import HyperScene from "./HyperScene";
+import { setRenderer } from "./3d/index.ts";
+import { input, speed } from "./input/index.ts";
+import ChatZone from "./Modules/ChatZone/index.ts";
+import { fetchMap, loadMap } from "./Modules/HyperModules/HyperMap.ts";
+import {
+  hyperTranslationMatrix,
+  rotationMatrix,
+} from "./Modules/HyperModules/HyperMaths.ts";
+import HyperScene from "./Modules/HyperModules/HyperScene.ts";
+import { Socket } from "./Modules/Socket/index.ts";
+import { openConnectionScreen } from "./Modules/ChatZone/connect.ts";
+import Railway from "./Modules/HCEntities/Train/Railway.ts";
+import TurtleReader from "./Modules/TurtleReader/index.ts";
 
-/**
- *
- * @param {HyperScene} hyperscene
- * @param {(tick: number) => void} onupdate
- */
-export const setRenderer = async (hyperscene, onupdate = (tick) => {}) => {
-  base.renderer.setClearColor(0x4488cc, 1);
+const world = await fetchMap("./assets/worlds/planes5.json");
+const hyperscene = new HyperScene(world.nb_squares);
+loadMap(world, hyperscene);
 
-  const light = new THREE.DirectionalLight(0xffffff);
-  light.position.set(0, 5, 0);
-  light.lookAt(0, 0, 0);
+const railway = new Railway(
+  new TurtleReader("L5R3U6"),
+  "",
+  world.nb_squares,
+  Math.PI / 16
+);
+railway.createRails(hyperscene);
 
-  base.scene.add(new THREE.AmbientLight(0xffffff, 2), hyperscene.scene);
+hyperscene.scene.rotateX(-Math.PI / 2).rotateZ(Math.PI);
+hyperscene.camera.multiply(hyperTranslationMatrix(0, 0, 0.5));
 
-  base.camera.position.set(0, 0, 0);
-  base.camera.lookAt(0, 0, -0.01);
-  base.camera.lookAt(0, 0, 0);
+const hud = document.getElementById("hud");
+const cz_el = document.createElement("div");
+const chatzone = new ChatZone(cz_el);
+hud.appendChild(cz_el);
 
-  let timer = 0;
+const conn = openConnectionScreen(hud, (name, server) => {
+  Socket(
+    `ws://${server}`,
+    hyperscene,
+    chatzone,
+    name,
+    conn.onSuccess,
+    conn.onFail
+  );
+});
 
-  base.renderer.setAnimationLoop((time, frame) => {
-    onupdate(time - timer);
-    hyperscene.render();
-    base.renderer.render(base.scene, base.camera);
-    timer = time;
-  });
-
-  document.getElementById("monitor").addEventListener("click", (ev) => {
-    base.requestPointerLock();
-  });
-};
-
-window.scene = base.scene;
+setRenderer(hyperscene, (tick) => {
+  if (input.lock) {
+    const movement = new THREE.Matrix4();
+    movement.multiply(
+      rotationMatrix(input.mouse.dy / 100, 0, -input.mouse.dx / 100)
+    );
+    movement.multiply(
+      hyperTranslationMatrix(
+        (speed.x * tick) / 1000,
+        (speed.y * tick) / 1000,
+        (speed.z * tick) / 1000
+      )
+    );
+    hyperscene.camera.multiply(movement);
+  }
+  hyperscene.projection = "B";
+  hyperscene.render();
+});
