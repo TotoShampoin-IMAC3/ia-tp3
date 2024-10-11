@@ -62,4 +62,4 @@ export default class HyperScene {
   }
 }
 
-//# sourceURL=webpack://hyperchat/./src/Modules/HyperModules/HyperScene.ts?
+//# sourceURL=webpack://hyperchat/./src/Modules/HyperModules/HyperScene?

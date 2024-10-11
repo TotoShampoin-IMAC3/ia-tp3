@@ -33,4 +33,4 @@ export default class HyperTile {
   }
 }
 
-//# sourceURL=webpack://hyperchat/./src/Modules/HyperModules/HyperTile.ts?
+//# sourceURL=webpack://hyperchat/./src/Modules/HyperModules/HyperTile?

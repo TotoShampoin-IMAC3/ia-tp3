@@ -1,17 +1,17 @@
 import * as THREE from "three";
-import { setRenderer } from "./3d/index.ts";
-import { input, speed } from "./input/index.ts";
-import ChatZone from "./Modules/ChatZone/index.ts";
-import { fetchMap, loadMap } from "./Modules/HyperModules/HyperMap.ts";
+import { setRenderer } from "./3d/index";
+import { input, speed } from "./input/index";
+import ChatZone from "./Modules/ChatZone/index";
+import { fetchMap, loadMap } from "./Modules/HyperModules/HyperMap";
 import {
   hyperTranslationMatrix,
   rotationMatrix,
-} from "./Modules/HyperModules/HyperMaths.ts";
-import HyperScene from "./Modules/HyperModules/HyperScene.ts";
-import { Socket } from "./Modules/Socket/index.ts";
-import { openConnectionScreen } from "./Modules/ChatZone/connect.ts";
-import Railway from "./Modules/HCEntities/Train/Railway.ts";
-import TurtleReader from "./Modules/TurtleReader/index.ts";
+} from "./Modules/HyperModules/HyperMaths";
+import HyperScene from "./Modules/HyperModules/HyperScene";
+import { Socket } from "./Modules/Socket/index";
+import { openConnectionScreen } from "./Modules/ChatZone/connect";
+import Railway from "./Modules/HCEntities/Train/Railway";
+import TurtleReader from "./Modules/TurtleReader/index";
 
 const world = await fetchMap("./assets/worlds/planes5.json");
 const hyperscene = new HyperScene(world.nb_squares);
