@@ -70,8 +70,7 @@ void HyperRenderer::setEuclideanCamera(const toto::Camera& camera) {
 void HyperRenderer::render(const HyperMesh& model) {
     model.draw();
 }
-void HyperRenderer::render(const HyperMesh& model, const glm::vec3& color, const HyperTransform& transform) {
-    setColor(color);
+void HyperRenderer::render(const HyperMesh& model, const HyperTransform& transform) {
     setTransform(transform);
     render(model);
 }

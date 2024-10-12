@@ -11,6 +11,8 @@ void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
         bool& right = callback_data->right;
         bool& up = callback_data->up;
         bool& down = callback_data->down;
+        bool& space = callback_data->space;
+        bool& shift = callback_data->shift;
         if (action == GLFW_PRESS) {
             switch (key) {
             case GLFW_KEY_LEFT:
@@ -28,6 +30,12 @@ void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
             case GLFW_KEY_DOWN:
             case GLFW_KEY_S: {
                 down = true;
+            } break;
+            case GLFW_KEY_SPACE: {
+                space = true;
+            } break;
+            case GLFW_KEY_LEFT_SHIFT: {
+                shift = true;
             } break;
             case GLFW_KEY_ESCAPE: {
                 callback_data->locked = false;
@@ -51,9 +59,15 @@ void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
             case GLFW_KEY_S: {
                 down = false;
             } break;
+            case GLFW_KEY_SPACE: {
+                space = false;
+            } break;
+            case GLFW_KEY_LEFT_SHIFT: {
+                shift = false;
+            } break;
             }
         }
-        callback_data->velocity = glm::vec3(right - left, up - down, 0.0f);
+        callback_data->velocity = glm::vec3(right - left, up - down, space - shift);
     });
     glfwSetCursorPosCallback(window.handle(), [](GLFWwindow* window, double xpos, double ypos) {
         auto callback_data = static_cast<CallbackData*>(glfwGetWindowUserPointer(window));

@@ -32,7 +32,7 @@ public:
     void setEuclideanCamera(const toto::Camera& camera);
 
     void render(const HyperMesh& model);
-    void render(const HyperMesh& model, const glm::vec3& color, const HyperTransform& transform);
+    void render(const HyperMesh& model, const HyperTransform& transform);
 
 private:
     toto::GLProgram _program = toto::loadRenderShaderFile("resources/hyper.vert", "resources/hyper.frag");

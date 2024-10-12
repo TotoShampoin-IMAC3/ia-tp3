@@ -8,6 +8,11 @@ public:
     void rotate(const glm::vec2& mouse_delta) {
         _pitch += mouse_delta.y * 0.01f;
         _yaw += mouse_delta.x * 0.01f;
+
+        if (_pitch < glm::radians(0.1f))
+            _pitch = glm::radians(0.1f);
+        if (_pitch > glm::radians(179.9f))
+            _pitch = glm::radians(179.9f);
     }
 
     float& pitch() { return _pitch; }

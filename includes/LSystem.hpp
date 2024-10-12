@@ -12,6 +12,7 @@ public:
           _length(length) {}
 
     HyperMesh generateHyperbolic();
+    HyperMesh generateHyperbolic(int N);
 
     std::string path() const { return _path; }
     float angle() const { return _angle; }

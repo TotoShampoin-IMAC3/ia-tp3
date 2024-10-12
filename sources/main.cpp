@@ -7,6 +7,8 @@
 #include "data.hpp"
 #include "misc.hpp"
 #include "shapes.hpp"
+#include "toto-engine/import-gl.hpp"
+#include "toto-engine/loader/image.hpp"
 #include "toto-engine/utils/camera.hpp"
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -54,22 +56,24 @@ int main(int argc, const char* argv[]) {
     const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
     const float distance = tileDistance(squares_at_a_vertex);
 
+    auto path = LSystemPath("FF>+[+F-F-F]-[-F+F+F]", 22.5f, .05f);
+    auto hyper_tree = path.generateHyperbolic(4);
+
     auto hyper_plane = plane(size, size, squares_at_a_vertex);
     hyper_plane.vertices = hyperbolize(hyper_plane.vertices, squares_at_a_vertex);
     auto hyper_mesh = HyperMesh(hyper_plane.vertices, hyper_plane.indices, GL_TRIANGLES);
 
-    auto path = LSystemPath("F+F+F+F+F+F+F+F+F+F+F+F+", 10.0f, .5f);
-    auto hyper_tree = path.generateHyperbolic();
+    auto grass = toto::loadTexture2D("resources/grass.jpg");
 
     auto renderer = HyperRenderer();
-    auto euclidean_camera = toto::Camera::Perspective(glm::radians(70.0f), aspect, 0.01f, 100.0f);
-    auto camera = HyperCamera(HyperbolicProjection::BeltramiKlein);
-    // auto camera = HyperCamera(HyperbolicProjection::PoincareDisk);
+    auto euclidean_camera = toto::Camera::Perspective(glm::radians(90.0f), aspect, 0.01f, 100.0f);
 
     euclidean_camera.transform().position() = glm::vec3(0.0f, 0.0f, 0.0f);
     euclidean_camera.transform().lookAt(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    // euclidean_camera.transform().position() = glm::vec3(0, 0, 1.5);
+    auto camera = HyperCamera(HyperbolicProjection::BeltramiKlein);
+    // euclidean_camera.transform().position() = glm::vec3(0, 0, 1);
     // euclidean_camera.transform().lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    // auto camera = HyperCamera(HyperbolicProjection::PoincareDisk);
 
     camera.eyeOffset() = glm::vec3(0.0f, 0.0f, .15f);
 
@@ -84,9 +88,11 @@ int main(int argc, const char* argv[]) {
 
     auto grid = generateHypergrid(distance, size);
     std::vector<glm::vec3> colors;
-    for (auto& transform : grid) {
-        colors.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
-    }
+    // for (auto& transform : grid) {
+    //     colors.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
+    // }
+    colors.push_back({0, .666, 0});
+    glClearColor(.5, .75, 1, 1);
 
     FPSController controller;
     controller.pitch() = glm::radians(90.0f);
@@ -99,6 +105,7 @@ int main(int argc, const char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_NONE);
+    glLineWidth(2);
 
     auto start = glfwGetTime();
     auto last = start;
@@ -117,25 +124,31 @@ int main(int argc, const char* argv[]) {
         euclidean_camera.transform().rotation() = glm::vec3(0.0f, 0.0f, 0.0f);
         euclidean_camera.transform().rotate(glm::vec3(0, 0, 1), controller.yaw());
         euclidean_camera.transform().rotate(glm::vec3(1, 0, 0), controller.pitch());
-        auto rotated_velocity = glm::vec3(controller.yawMatrix() * glm::vec4(velocity, 1.0f));
+        auto rotated_velocity = glm::vec3(controller.yawMatrix() * glm::vec4(velocity.x, velocity.y, 0, 1));
         camera.transform().translate(float(delta) * rotated_velocity * speed);
+        camera.eyeOffset() += glm::vec3(0, 0, velocity.z * speed) * float(delta);
 
         renderer.setEuclideanCamera(euclidean_camera);
         renderer.setCamera(camera);
 
         renderer.clear();
-        int i = 0;
+        // int i = 0;
+        renderer.setColor(glm::vec3(.25f));
+        renderer.setTexture(grass);
         for (auto& transform : grid) {
-            auto color = colors[i % colors.size()];
-            renderer.render(hyper_mesh, color, transform);
-            i++;
+            // auto color = colors[i % colors.size()];
+            // renderer.setColor(color);
+            renderer.render(hyper_mesh, transform);
+            // i++;
         }
 
-        auto T = HyperTransform()                                     //
-                     .rotated(glm::vec3(0, 1, 0), glm::radians(90.f)) //
-                     .translated(glm::vec3(0.0f, 0.0f, .0001f))       //
+        auto T = HyperTransform() //
+                                  //  .translated(glm::vec3(0, 0, 0.0001f))             //
+                                  //  .rotated(glm::vec3(0, 1, 0), glm::radians(90.0f)) //
             ;
-        renderer.render(hyper_tree, glm::vec3(1.0f, 1.0f, 1.0f), T);
+        renderer.setTexture(std::nullopt);
+        renderer.setColor(glm::vec3(1.f));
+        renderer.render(hyper_tree, T);
 
         callback_data.updateDeltas();
         window.pollEvents();

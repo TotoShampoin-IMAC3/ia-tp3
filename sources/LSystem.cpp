@@ -47,3 +47,18 @@ HyperMesh LSystemPath::generateHyperbolic() {
 
     return HyperMesh(vertices, indices, GL_LINES);
 }
+
+HyperMesh LSystemPath::generateHyperbolic(int N) {
+    std::string path = _path;
+    for (int i = 0; i < N; i++) {
+        std::string new_path;
+        for (auto c : path) {
+            switch (c) {
+            case 'F': new_path += _path; break;
+            default: new_path += c;
+            }
+        }
+        path = new_path;
+    }
+    return LSystemPath(path, _angle, _length).generateHyperbolic();
+}
