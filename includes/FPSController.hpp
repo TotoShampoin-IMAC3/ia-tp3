@@ -10,6 +10,9 @@ public:
         _yaw += mouse_delta.x * 0.01f;
     }
 
+    float& pitch() { return _pitch; }
+    float& yaw() { return _yaw; }
+
     float pitch() const { return _pitch; }
     float yaw() const { return _yaw; }
 

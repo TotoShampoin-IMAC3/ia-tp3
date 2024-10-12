@@ -1,5 +1,7 @@
 #include "data.hpp"
+#include "HyperTransform.hpp"
 #include <GLFW/glfw3.h>
+#include <vector>
 
 void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
     glfwSetWindowUserPointer(window.handle(), &callback_data);
@@ -11,18 +13,44 @@ void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
         bool& down = callback_data->down;
         if (action == GLFW_PRESS) {
             switch (key) {
-            case GLFW_KEY_LEFT: left = true; break;
-            case GLFW_KEY_RIGHT: right = true; break;
-            case GLFW_KEY_UP: up = true; break;
-            case GLFW_KEY_DOWN: down = true; break;
-            case GLFW_KEY_ESCAPE: callback_data->locked = false; break;
+            case GLFW_KEY_LEFT:
+            case GLFW_KEY_A: {
+                left = true;
+            } break;
+            case GLFW_KEY_RIGHT:
+            case GLFW_KEY_D: {
+                right = true;
+            } break;
+            case GLFW_KEY_UP:
+            case GLFW_KEY_W: {
+                up = true;
+            } break;
+            case GLFW_KEY_DOWN:
+            case GLFW_KEY_S: {
+                down = true;
+            } break;
+            case GLFW_KEY_ESCAPE: {
+                callback_data->locked = false;
+            } break;
             }
         } else if (action == GLFW_RELEASE) {
             switch (key) {
-            case GLFW_KEY_LEFT: left = false; break;
-            case GLFW_KEY_RIGHT: right = false; break;
-            case GLFW_KEY_UP: up = false; break;
-            case GLFW_KEY_DOWN: down = false; break;
+            case GLFW_KEY_LEFT:
+            case GLFW_KEY_A: {
+                left = false;
+            } break;
+            case GLFW_KEY_RIGHT:
+            case GLFW_KEY_D: {
+                right = false;
+            } break;
+            case GLFW_KEY_UP:
+            case GLFW_KEY_W: {
+                up = false;
+            } break;
+            case GLFW_KEY_DOWN:
+            case GLFW_KEY_S: {
+                down = false;
+            } break;
             }
         }
         callback_data->velocity = glm::vec3(right - left, up - down, 0.0f);
@@ -40,4 +68,26 @@ void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
             callback_data->locked = true;
         }
     });
+}
+
+std::vector<HyperTransform> generateHypergrid(const float& distance, const float& size) {
+    return std::vector<HyperTransform> {
+        HyperTransform(),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
+    };
 }

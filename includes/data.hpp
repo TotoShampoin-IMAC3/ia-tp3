@@ -1,7 +1,9 @@
 #pragma once
 
+#include "HyperTransform.hpp"
 #include "toto-engine/window.hpp"
 #include <glm/glm.hpp>
+#include <vector>
 
 struct CallbackData {
     glm::vec3& velocity;
@@ -14,3 +16,5 @@ struct CallbackData {
 };
 
 void handleCallbacks(toto::Window&, CallbackData&);
+
+std::vector<HyperTransform> generateHypergrid(const float& distance, const float& size);

@@ -3,6 +3,7 @@
 #include "HyperMesh.hpp"
 #include "HyperRenderer.hpp"
 #include "HyperTransform.hpp"
+#include "LSystem.hpp"
 #include "data.hpp"
 #include "misc.hpp"
 #include "shapes.hpp"
@@ -12,6 +13,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/trigonometric.hpp>
 #include <random>
 #include <toto-engine/gl/glresources.hpp>
 #include <toto-engine/mesh.hpp>
@@ -56,6 +58,9 @@ int main(int argc, const char* argv[]) {
     hyper_plane.vertices = hyperbolize(hyper_plane.vertices, squares_at_a_vertex);
     auto hyper_mesh = HyperMesh(hyper_plane.vertices, hyper_plane.indices, GL_TRIANGLES);
 
+    auto path = LSystemPath("F+F+F+F+F+F+F+F+F+F+F+F+", 10.0f, .5f);
+    auto hyper_tree = path.generateHyperbolic();
+
     auto renderer = HyperRenderer();
     auto euclidean_camera = toto::Camera::Perspective(glm::radians(70.0f), aspect, 0.01f, 100.0f);
     auto camera = HyperCamera(HyperbolicProjection::BeltramiKlein);
@@ -77,33 +82,14 @@ int main(int argc, const char* argv[]) {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dis(0.25f, .75f);
 
-    // A simple hyperbolic tiling
-    // In hyperbolic space, up-left is not the same as left-up
-    auto grid = {
-        HyperTransform(),
-        HyperTransform().translated(glm::vec3(1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, 1, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, -1, 0) * distance),
-        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
-        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
-        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
-        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
-        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
-    };
+    auto grid = generateHypergrid(distance, size);
     std::vector<glm::vec3> colors;
-    for (int i = 0; i < grid.size(); i++) {
+    for (auto& transform : grid) {
         colors.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
     }
 
     FPSController controller;
+    controller.pitch() = glm::radians(90.0f);
 
     glm::vec3 velocity(0.0f);
     bool locked = false;
@@ -123,7 +109,7 @@ int main(int argc, const char* argv[]) {
 
         if (locked) {
             glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            controller.rotate(callback_data.mouse_delta);
+            controller.rotate(-callback_data.mouse_delta);
         } else {
             glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
@@ -144,6 +130,12 @@ int main(int argc, const char* argv[]) {
             renderer.render(hyper_mesh, color, transform);
             i++;
         }
+
+        auto T = HyperTransform()                                     //
+                     .rotated(glm::vec3(0, 1, 0), glm::radians(90.f)) //
+                     .translated(glm::vec3(0.0f, 0.0f, .0001f))       //
+            ;
+        renderer.render(hyper_tree, glm::vec3(1.0f, 1.0f, 1.0f), T);
 
         callback_data.updateDeltas();
         window.pollEvents();
