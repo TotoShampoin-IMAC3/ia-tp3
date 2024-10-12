@@ -1,28 +1,3 @@
-# cmake_minimum_required(VERSION 3.27) # I wanna go higher, but clangd doesn't seem to support modules
-# project(ai-tp3)
-
-# include("utils/files_and_folders.cmake")
-# include(vendors/imgui.cmake)
-
-# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/dist)
-
-# set(CMAKE_CXX_STANDARD 23)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# file(GLOB_RECURSE SRC_FILES sources/*.cpp)
-# file(GLOB_RECURSE INC_FILES includes/*.h includes/*.hpp)
-
-# add_subdirectory(vendors/glad)
-# find_package(glfw3 REQUIRED)
-# find_package(glm REQUIRED)
-
-# add_executable(${PROJECT_NAME} ${SRC_FILES})
-# target_include_directories(${PROJECT_NAME} PRIVATE includes)
-
-# target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL glfw glad glm imgui)
-
-# Cool__target_copy_folder(${PROJECT_NAME} "resources")
 cmake_minimum_required(VERSION 3.12)
 
 project(ia-tp3)
@@ -42,10 +17,10 @@ add_subdirectory(vendors/toto-engine)
 
 file(GLOB_RECURSE SOURCES ${SRC_DIR}/*.cpp)
 
-add_executable(cppgl ${SOURCES})
+add_executable(ia-tp3 ${SOURCES})
 
-target_include_directories(cppgl PUBLIC ${INC_DIR})
+target_include_directories(ia-tp3 PUBLIC ${INC_DIR})
 
-target_link_libraries(cppgl PRIVATE toto-engine imgui)
+target_link_libraries(ia-tp3 PRIVATE toto-engine imgui)
 
-Cool__target_copy_folder(cppgl res)
+Cool__target_copy_folder(ia-tp3 resources)
