@@ -2,6 +2,10 @@
 
 #include <glm/glm.hpp>
 
+/**
+ * @brief A class to represent a H3 hyperbolic transformation.
+ *
+ */
 class HyperTransform {
 public:
     static glm::mat4 translation(const glm::vec3& translation);

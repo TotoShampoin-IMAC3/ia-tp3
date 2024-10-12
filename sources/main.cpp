@@ -26,7 +26,6 @@ int main(int argc, const char* argv[]) {
     window.makeContextCurrent();
     toto::Window::initGL();
 
-    // const float size = 1.f;
     const float size = tileSizeEucl(5) * 2.;
     const float distance = tileDistance(5);
 
@@ -38,6 +37,15 @@ int main(int argc, const char* argv[]) {
 
     auto shader = toto::loadRenderShaderFile("resources/hyper.vert", "resources/hyper.frag");
 
+    // The matrices needed for hyperbolic rendering are generated in the CPU
+    // The GPU only needs to multiply them.
+
+    // There are two parts for the rendering:
+    // - The projection from hyperbolic space to euclidean space
+    //   -> u_projection_euclidean and u_view_euclidean
+    // - The projection from euclidean space to screen space
+    //   -> u_projection_mode, u_view and u_model
+
     auto u_projection_euclidean = toto::Uniform(shader, "u_projection_euclidean");
     auto u_view_euclidean = toto::Uniform(shader, "u_view_euclidean");
     auto u_projection_mode = toto::Uniform(shader, "u_projection_mode");
@@ -45,11 +53,9 @@ int main(int argc, const char* argv[]) {
     auto u_model = toto::Uniform(shader, "u_model");
     auto u_color = toto::Uniform(shader, "u_color");
 
+    // The euclidean camera can be anywhere to visualize the hyperbolic thing
+    // But by default, it is at the origin, to immerse the user in the hyperbolic space
     auto euclidean_camera = toto::Camera::Perspective(glm::radians(70.0f), aspect, 0.1f, 100.0f);
-
-    // euclidean_camera.transform().position() = glm::vec3(0.0f, 0.0f, 2.0f);
-    // euclidean_camera.transform().lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
     euclidean_camera.transform().position() = glm::vec3(0.0f, 0.0f, 0.0f);
     euclidean_camera.transform().lookAt(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -57,11 +63,15 @@ int main(int argc, const char* argv[]) {
 
     u_projection_euclidean.set(euclidean_camera.projectionMatrix());
     u_view_euclidean.set(euclidean_camera.viewMatrix());
-    // u_view_euclidean.set(glm::lookAt(glm::vec3(0.0f, -2.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-    u_projection_mode.set(0); // Beltrami-Klein
-    // u_projection_mode.set(1); // Poincaré disk
     u_view.set(glm::mat4(1.0f));
     u_model.set(glm::mat4(1.0f));
+
+    // The projection mode determines how hyperbolic space is projected to euclidean space.
+    // - Pointcaré is the most visually appealing, it maintains angles and shows how curved the space is.
+    // - Beltrami-Klein is better for "immersion mode", as it maintains linearity.
+    // From the center, both look identical (minus some errors due to the curvature in Pointcaré).
+    u_projection_mode.set(0); // Beltrami-Klein
+    // u_projection_mode.set(1); // Poincaré disk
 
     glm::vec3 velocity(0.0f);
     bool is_moving = false;
