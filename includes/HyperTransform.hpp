@@ -11,6 +11,9 @@ public:
     static glm::mat4 translation(const glm::vec3& translation);
     static glm::mat4 rotation(const glm::vec3& axis, float angle);
 
+    HyperTransform translated(const glm::vec3& translation) const;
+    HyperTransform rotated(const glm::vec3& axis, float angle) const;
+
     void translate(const glm::vec3& translation);
     void rotate(const glm::vec3& axis, float angle);
 

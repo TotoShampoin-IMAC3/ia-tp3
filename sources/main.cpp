@@ -1,92 +1,114 @@
+#include "FPSController.hpp"
+#include "HyperCamera.hpp"
 #include "HyperMesh.hpp"
+#include "HyperRenderer.hpp"
 #include "HyperTransform.hpp"
 #include "data.hpp"
 #include "misc.hpp"
 #include "shapes.hpp"
-#include "toto-engine/loader/shader.hpp"
 #include "toto-engine/utils/camera.hpp"
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
-#include <string>
+#include <random>
 #include <toto-engine/gl/glresources.hpp>
 #include <toto-engine/mesh.hpp>
 #include <toto-engine/uniform.hpp>
 #include <toto-engine/window.hpp>
 #include <vector>
 
+// The matrices needed for hyperbolic rendering are generated in the CPU
+// The GPU only needs to multiply them.
+
+// There are two parts for the rendering:
+// - The projection from hyperbolic space to euclidean space
+//   -> u_projection_euclidean and u_view_euclidean
+// - The projection from euclidean space to screen space
+//   -> u_projection_mode, u_view and u_model
+
+// The projection mode determines how hyperbolic space is projected to euclidean space.
+// - Beltrami-Klein is better for "immersion mode", as it maintains linearity.
+// - Pointcaré Disk is the most visually appealing, it maintains angles and shows how curved the space is.
+// - The Gans model is the most stretchy one, as it is simply a flat projection.
+// From the center, All three look identical.
+
+// The euclidean camera can be anywhere to visualize the hyperbolic thing
+// Placed at the origin, it serves to immerse the user in the hyperbolic space
+// Placed outside, it allows the user to have a better idea of the hyperbolic curvature
+
 int main(int argc, const char* argv[]) {
     int width = 1440;
     int height = 900;
     float aspect = static_cast<float>(width) / static_cast<float>(height);
+    int squares_at_a_vertex = 5;
+    float speed = 0.5f;
 
     auto window = toto::Window(width, height, "Hyperbolic");
     window.makeContextCurrent();
     toto::Window::initGL();
 
-    const float size = tileSizeEucl(5) * 2.;
-    const float distance = tileDistance(5);
+    const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
+    const float distance = tileDistance(squares_at_a_vertex);
 
-    auto hyper_plane = plane(size, size, 5);
-    hyper_plane.vertices = hyperbolize(hyper_plane.vertices, 5);
+    auto hyper_plane = plane(size, size, squares_at_a_vertex);
+    hyper_plane.vertices = hyperbolize(hyper_plane.vertices, squares_at_a_vertex);
     auto hyper_mesh = HyperMesh(hyper_plane.vertices, hyper_plane.indices, GL_TRIANGLES);
 
-    auto camera_transform = HyperTransform();
+    auto renderer = HyperRenderer();
+    auto euclidean_camera = toto::Camera::Perspective(glm::radians(70.0f), aspect, 0.01f, 100.0f);
+    auto camera = HyperCamera(HyperbolicProjection::BeltramiKlein);
+    // auto camera = HyperCamera(HyperbolicProjection::PoincareDisk);
 
-    auto shader = toto::loadRenderShaderFile("resources/hyper.vert", "resources/hyper.frag");
-
-    // The matrices needed for hyperbolic rendering are generated in the CPU
-    // The GPU only needs to multiply them.
-
-    // There are two parts for the rendering:
-    // - The projection from hyperbolic space to euclidean space
-    //   -> u_projection_euclidean and u_view_euclidean
-    // - The projection from euclidean space to screen space
-    //   -> u_projection_mode, u_view and u_model
-
-    auto u_projection_euclidean = toto::Uniform(shader, "u_projection_euclidean");
-    auto u_view_euclidean = toto::Uniform(shader, "u_view_euclidean");
-    auto u_projection_mode = toto::Uniform(shader, "u_projection_mode");
-    auto u_view = toto::Uniform(shader, "u_view");
-    auto u_model = toto::Uniform(shader, "u_model");
-    auto u_color = toto::Uniform(shader, "u_color");
-
-    // The euclidean camera can be anywhere to visualize the hyperbolic thing
-    // But by default, it is at the origin, to immerse the user in the hyperbolic space
-    auto euclidean_camera = toto::Camera::Perspective(glm::radians(70.0f), aspect, 0.1f, 100.0f);
     euclidean_camera.transform().position() = glm::vec3(0.0f, 0.0f, 0.0f);
     euclidean_camera.transform().lookAt(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    // euclidean_camera.transform().position() = glm::vec3(0, 0, 1.5);
+    // euclidean_camera.transform().lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 
-    shader.use();
+    camera.eyeOffset() = glm::vec3(0.0f, 0.0f, .15f);
 
-    u_projection_euclidean.set(euclidean_camera.projectionMatrix());
-    u_view_euclidean.set(euclidean_camera.viewMatrix());
-    u_view.set(glm::mat4(1.0f));
-    u_model.set(glm::mat4(1.0f));
+    renderer.useProgram();
 
-    // The projection mode determines how hyperbolic space is projected to euclidean space.
-    // - Pointcaré is the most visually appealing, it maintains angles and shows how curved the space is.
-    // - Beltrami-Klein is better for "immersion mode", as it maintains linearity.
-    // From the center, both look identical (minus some errors due to the curvature in Pointcaré).
-    u_projection_mode.set(0); // Beltrami-Klein
-    // u_projection_mode.set(1); // Poincaré disk
+    renderer.setCamera(camera);
+    renderer.setEuclideanCamera(euclidean_camera);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(0.25f, .75f);
+
+    // A simple hyperbolic tiling
+    // In hyperbolic space, up-left is not the same as left-up
+    auto grid = {
+        HyperTransform(),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(1, 0, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(-1, 0, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(0, 1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, 1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(0, -1, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
+        HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
+    };
+    std::vector<glm::vec3> colors;
+    for (int i = 0; i < grid.size(); i++) {
+        colors.push_back(glm::vec3(dis(gen), dis(gen), dis(gen)));
+    }
+
+    FPSController controller;
 
     glm::vec3 velocity(0.0f);
-    bool is_moving = false;
+    bool locked = false;
 
-    glm::vec3 colors[] = {
-        {1, 0, 0},
-        {0, 1, 0},
-        {0, 0, 1},
-        {1, 1, 0},
-        {1, 0, 1},
-        {0, 1, 1},
-        {1, 1, 1},
-    };
-
-    auto callback_data = CallbackData {velocity, is_moving};
+    auto callback_data = CallbackData {velocity, locked};
     handleCallbacks(window, callback_data);
 
     glEnable(GL_DEPTH_TEST);
@@ -98,33 +120,32 @@ int main(int argc, const char* argv[]) {
         auto now = glfwGetTime();
         auto time = now - start;
         auto delta = now - last;
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        camera_transform.translate(float(delta) * velocity);
+        if (locked) {
+            glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            controller.rotate(callback_data.mouse_delta);
+        } else {
+            glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
 
-        shader.use();
-        u_view.set(glm::inverse(camera_transform.matrix() * HyperTransform::translation(glm::vec3(0, 0, .25f))));
+        euclidean_camera.transform().rotation() = glm::vec3(0.0f, 0.0f, 0.0f);
+        euclidean_camera.transform().rotate(glm::vec3(0, 0, 1), controller.yaw());
+        euclidean_camera.transform().rotate(glm::vec3(1, 0, 0), controller.pitch());
+        auto rotated_velocity = glm::vec3(controller.yawMatrix() * glm::vec4(velocity, 1.0f));
+        camera.transform().translate(float(delta) * rotated_velocity * speed);
 
-        u_color.set(colors[0]);
-        u_model.set(glm::mat4(1.0f));
-        hyper_mesh.draw();
+        renderer.setEuclideanCamera(euclidean_camera);
+        renderer.setCamera(camera);
 
-        u_color.set(colors[1]);
-        u_model.set(HyperTransform::translation(glm::vec3(1, 0, 0) * distance));
-        hyper_mesh.draw();
+        renderer.clear();
+        int i = 0;
+        for (auto& transform : grid) {
+            auto color = colors[i % colors.size()];
+            renderer.render(hyper_mesh, color, transform);
+            i++;
+        }
 
-        u_color.set(colors[2]);
-        u_model.set(HyperTransform::translation(glm::vec3(-1, 0, 0) * distance));
-        hyper_mesh.draw();
-
-        u_color.set(colors[3]);
-        u_model.set(HyperTransform::translation(glm::vec3(0, 1, 0) * distance));
-        hyper_mesh.draw();
-
-        u_color.set(colors[4]);
-        u_model.set(HyperTransform::translation(glm::vec3(0, -1, 0) * distance));
-        hyper_mesh.draw();
-
+        callback_data.updateDeltas();
         window.pollEvents();
         window.swapBuffers();
         last = now;

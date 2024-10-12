@@ -13,6 +13,18 @@ glm::mat4 HyperTransform::rotation(const glm::vec3& axis, float angle) {
     return glm::rotate(glm::mat4(1), angle, axis);
 }
 
+HyperTransform HyperTransform::translated(const glm::vec3& translation) const {
+    HyperTransform transform = *this;
+    transform.translate(translation);
+    return transform;
+}
+
+HyperTransform HyperTransform::rotated(const glm::vec3& axis, float angle) const {
+    HyperTransform transform = *this;
+    transform.rotate(axis, angle);
+    return transform;
+}
+
 void HyperTransform::translate(const glm::vec3& translation) {
     _matrix = _matrix * HyperTransform::translation(translation);
 }
