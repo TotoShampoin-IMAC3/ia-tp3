@@ -40,6 +40,8 @@ struct HyperMesh {
 
     HyperMesh(const std::vector<HyperVertex>& vertices, const std::vector<GLuint>& indices, GLenum mode);
     void draw() const;
+
+    void set(const std::vector<HyperVertex>& vertices, const std::vector<GLuint>& indices);
 };
 
 /**

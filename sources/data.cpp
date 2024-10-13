@@ -1,6 +1,9 @@
 #include "data.hpp"
 #include "HyperTransform.hpp"
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <vector>
 
 void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
@@ -78,7 +81,7 @@ void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
     });
     glfwSetMouseButtonCallback(window.handle(), [](GLFWwindow* window, int button, int action, int mods) {
         auto callback_data = static_cast<CallbackData*>(glfwGetWindowUserPointer(window));
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && !ImGui::GetIO().WantCaptureMouse) {
             callback_data->locked = true;
         }
     });
@@ -104,4 +107,35 @@ std::vector<HyperTransform> generateHypergrid(const float& distance, const float
         HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(1, 0, 0) * distance),
         HyperTransform().translated(glm::vec3(0, -1, 0) * distance).translated(glm::vec3(-1, 0, 0) * distance),
     };
+}
+
+void initImgui(toto::Window& window) {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window.handle(), true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+}
+
+void renderImgui(toto::Window& window, ImugiData& data) {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("LSystem");
+    ImGui::InputText("Path", data.rule_str.data(), data.rule_str.size());
+    ImGui::InputInt("Iterations", &data.nb_iter);
+    ImGui::InputFloat("Angle", &data.angle);
+    ImGui::InputFloat("Length", &data.length);
+    if (ImGui::Button("Regenerate")) {
+        data.rule.path() =
+            std::string(data.rule_str.begin(), std::find(data.rule_str.begin(), data.rule_str.end(), '\0'));
+        data.rule.angle() = data.angle;
+        data.rule.length() = data.length;
+
+        auto model = data.rule.generateHyperbolic(data.nb_iter);
+        data.hyper_tree.set(model.vertices, model.indices);
+    }
+    ImGui::End();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

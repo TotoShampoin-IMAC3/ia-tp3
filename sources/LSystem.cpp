@@ -1,11 +1,13 @@
 #include "LSystem.hpp"
 #include "HyperMesh.hpp"
 #include "HyperTransform.hpp"
+#include "misc.hpp"
+#include <algorithm>
 #include <stack>
 #include <tuple>
 #include <vector>
 
-HyperMesh LSystemPath::generateHyperbolic() {
+HyperModel LSystemRule::generateHyperbolic() {
     std::vector<HyperVertex> vertices;
     std::vector<unsigned int> indices;
 
@@ -45,14 +47,16 @@ HyperMesh LSystemPath::generateHyperbolic() {
         }
     }
 
-    return HyperMesh(vertices, indices, GL_LINES);
+    return HyperModel(vertices, indices);
 }
 
-HyperMesh LSystemPath::generateHyperbolic(int N) {
+HyperModel LSystemRule::generateHyperbolic(int N) {
     std::string path = _path;
     for (int i = 0; i < N; i++) {
         std::string new_path;
         for (auto c : path) {
+            if (c == 0)
+                break;
             switch (c) {
             case 'F': new_path += _path; break;
             default: new_path += c;
@@ -60,5 +64,5 @@ HyperMesh LSystemPath::generateHyperbolic(int N) {
         }
         path = new_path;
     }
-    return LSystemPath(path, _angle, _length).generateHyperbolic();
+    return LSystemRule(path, _angle, _length).generateHyperbolic();
 }

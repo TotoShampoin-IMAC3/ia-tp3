@@ -12,10 +12,7 @@
 #include "toto-engine/utils/camera.hpp"
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/ext/quaternion_common.hpp>
-#include <glm/trigonometric.hpp>
+#include <glm/glm.hpp>
 #include <random>
 #include <toto-engine/gl/glresources.hpp>
 #include <toto-engine/mesh.hpp>
@@ -56,8 +53,9 @@ int main(int argc, const char* argv[]) {
     const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
     const float distance = tileDistance(squares_at_a_vertex);
 
-    auto path = LSystemPath("FF>+[+F-F-F]-[-F+F+F]", 22.5f, .05f);
+    auto path = LSystemRule("FF>+[+F-F-F]-[-F+F+F]", 22.5f, .05f);
     auto hyper_tree = path.generateHyperbolic(4);
+    auto hyper_tree_mesh = HyperMesh(hyper_tree.vertices, hyper_tree.indices, GL_LINES);
 
     auto hyper_plane = plane(size, size, squares_at_a_vertex);
     hyper_plane.vertices = hyperbolize(hyper_plane.vertices, squares_at_a_vertex);
@@ -107,6 +105,9 @@ int main(int argc, const char* argv[]) {
     glCullFace(GL_NONE);
     glLineWidth(2);
 
+    ImugiData ImugiData {path, hyper_tree_mesh};
+    initImgui(window);
+
     auto start = glfwGetTime();
     auto last = start;
     while (!window.shouldClose()) {
@@ -117,16 +118,15 @@ int main(int argc, const char* argv[]) {
         if (locked) {
             glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             controller.rotate(-callback_data.mouse_delta);
+            auto rotated_velocity = glm::vec3(controller.yawMatrix() * glm::vec4(velocity.x, velocity.y, 0, 1));
+            camera.transform().translate(float(delta) * rotated_velocity * speed);
+            euclidean_camera.transform().rotation() = glm::vec3(0.0f, 0.0f, 0.0f);
+            euclidean_camera.transform().rotate(glm::vec3(0, 0, 1), controller.yaw());
+            euclidean_camera.transform().rotate(glm::vec3(1, 0, 0), controller.pitch());
+            camera.eyeOffset() += glm::vec3(0, 0, velocity.z * speed) * float(delta);
         } else {
             glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
-
-        euclidean_camera.transform().rotation() = glm::vec3(0.0f, 0.0f, 0.0f);
-        euclidean_camera.transform().rotate(glm::vec3(0, 0, 1), controller.yaw());
-        euclidean_camera.transform().rotate(glm::vec3(1, 0, 0), controller.pitch());
-        auto rotated_velocity = glm::vec3(controller.yawMatrix() * glm::vec4(velocity.x, velocity.y, 0, 1));
-        camera.transform().translate(float(delta) * rotated_velocity * speed);
-        camera.eyeOffset() += glm::vec3(0, 0, velocity.z * speed) * float(delta);
 
         renderer.setEuclideanCamera(euclidean_camera);
         renderer.setCamera(camera);
@@ -148,7 +148,9 @@ int main(int argc, const char* argv[]) {
             ;
         renderer.setTexture(std::nullopt);
         renderer.setColor(glm::vec3(1.f));
-        renderer.render(hyper_tree, T);
+        renderer.render(hyper_tree_mesh, T);
+
+        renderImgui(window, ImugiData);
 
         callback_data.updateDeltas();
         window.pollEvents();

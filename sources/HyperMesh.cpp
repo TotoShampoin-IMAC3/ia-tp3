@@ -18,6 +18,12 @@ void HyperMesh::draw() const {
     glDrawElements(mode, index_count, GL_UNSIGNED_INT, nullptr);
 }
 
+void HyperMesh::set(const std::vector<HyperVertex>& vertices, const std::vector<GLuint>& indices) {
+    vbo.data(vertices, GL_STATIC_DRAW);
+    ibo.data(indices, GL_STATIC_DRAW);
+    index_count = indices.size();
+}
+
 float tileSizeEucl(int squares_at_a_vertex) {
     float angle = glm::pi<float>() / squares_at_a_vertex;
     float leg = glm::pow(glm::cos(angle), 2) - 0.5;
