@@ -14,7 +14,7 @@ public:
     HyperCamera(const HyperbolicProjection& projection)
         : _projection(projection) {}
 
-    void setProjectionMode(const HyperbolicProjection& projection);
+    void setProjectionMode(const HyperbolicProjection& projection) { _projection = projection; }
 
     HyperTransform& transform() { return _transform; }
     const HyperTransform& transform() const { return _transform; }

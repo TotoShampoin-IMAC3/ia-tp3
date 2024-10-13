@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HyperCamera.hpp"
 #include "HyperMesh.hpp"
 #include "HyperTransform.hpp"
 #include "LSystem.hpp"
@@ -19,14 +20,18 @@ struct CallbackData {
 struct ImugiData {
     LSystemRule& rule;
     HyperMesh& hyper_tree;
+    bool& outside_cam;
+    HyperCamera& camera;
     std::vector<char> rule_str = std::vector<char>(256, 0);
     int nb_iter = 4;
     float angle = 0;
     float length = 0;
 
-    ImugiData(LSystemRule& rule, HyperMesh& hyper_tree)
+    ImugiData(LSystemRule& rule, HyperMesh& hyper_tree, bool& outside_cam, HyperCamera& camera)
         : rule(rule),
-          hyper_tree(hyper_tree) {
+          hyper_tree(hyper_tree),
+          outside_cam(outside_cam),
+          camera(camera) {
         std::copy(rule.path().begin(), rule.path().end(), rule_str.begin());
         angle = rule.angle();
         length = rule.length();

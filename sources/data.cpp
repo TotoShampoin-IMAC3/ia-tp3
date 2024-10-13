@@ -135,6 +135,11 @@ void renderImgui(toto::Window& window, ImugiData& data) {
         auto model = data.rule.generateHyperbolic(data.nb_iter);
         data.hyper_tree.set(model.vertices, model.indices);
     }
+    ImGui::Text("");
+    ImGui::Checkbox("Use Outside Camera", &data.outside_cam);
+    if (ImGui::Button("Reset Position")) {
+        data.camera.transform() = HyperTransform();
+    }
     ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
