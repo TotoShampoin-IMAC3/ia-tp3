@@ -1,7 +1,6 @@
 #pragma once
 
 #include "HyperMesh.hpp"
-#include <map>
 #include <string>
 
 class LSystemRule {

@@ -3,9 +3,9 @@
 ## TODO:
 
 - [x] Implement Hyperbolic space rendering
-- [ ] Implement a L-System
-- [ ] Integrate the L-System in hyperbolic space
-- [ ] Make the simulation pretty
+- [x] Implement a L-System
+- [x] Integrate the L-System in hyperbolic space
+- [ ] Implement an actual L-System
 
 ## What is in [old](./old/)?
 

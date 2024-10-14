@@ -1,8 +1,6 @@
 #include "LSystem.hpp"
 #include "HyperMesh.hpp"
 #include "HyperTransform.hpp"
-#include "misc.hpp"
-#include <algorithm>
 #include <stack>
 #include <tuple>
 #include <vector>
