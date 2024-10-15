@@ -54,7 +54,7 @@ int main(int argc, const char* argv[]) {
     const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
     const float distance = tileDistance(squares_at_a_vertex);
 
-    auto path = LSystemRule("FF>+[+F-F-F]-[-F+F+F]", 22.5f, .05f);
+    auto path = LSystemRule("F[+F][&F]F[-F][^F]F", 45.f, .025f);
     auto hyper_tree = path.generateHyperbolic(4);
     auto hyper_tree_mesh = HyperMesh(hyper_tree.vertices, hyper_tree.indices, GL_LINES);
 
@@ -102,7 +102,8 @@ int main(int argc, const char* argv[]) {
     auto callback_data = CallbackData {velocity, locked};
     handleCallbacks(window, callback_data);
 
-    ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera};
+    ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset()};
+    imgui_data.extractRule();
     initImgui(window);
 
     glEnable(GL_DEPTH_TEST);
@@ -120,7 +121,7 @@ int main(int argc, const char* argv[]) {
             glfwSetInputMode(window.handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             controller.rotate(-callback_data.mouse_delta);
             auto rotated_velocity = glm::vec3(controller.yawMatrix() * glm::vec4(velocity.x, velocity.y, 0, 1));
-            camera.transform().translate(float(delta) * rotated_velocity * speed);
+            camera.transform().translate(float(delta) * rotated_velocity * speed * glm::exp(-camera.eyeOffset().z));
             euclidean_camera.transform().rotation() = glm::vec3(0.0f, 0.0f, 0.0f);
             euclidean_camera.transform().rotate(glm::vec3(0, 0, 1), controller.yaw());
             euclidean_camera.transform().rotate(glm::vec3(1, 0, 0), controller.pitch());

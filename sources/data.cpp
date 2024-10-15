@@ -137,6 +137,7 @@ void renderImgui(toto::Window& window, ImugiData& data) {
     }
     ImGui::Text("");
     ImGui::Checkbox("Use Outside Camera", &data.outside_cam);
+    ImGui::InputFloat3("Eye Offset", &data.eye_offset.x);
     if (ImGui::Button("Reset Position")) {
         data.camera.transform() = HyperTransform();
     }
