@@ -8,20 +8,20 @@
  */
 class HyperTransform {
 public:
-    static glm::mat4 translation(const glm::vec3& translation);
-    static glm::mat4 rotation(const glm::vec3& axis, float angle);
+    static glm::dmat4 translation(const glm::dvec3& translation);
+    static glm::dmat4 rotation(const glm::dvec3& axis, double angle);
 
-    HyperTransform translated(const glm::vec3& translation) const;
-    HyperTransform rotated(const glm::vec3& axis, float angle) const;
+    HyperTransform translated(const glm::dvec3& translation) const;
+    HyperTransform rotated(const glm::dvec3& axis, double angle) const;
 
-    void translate(const glm::vec3& translation);
-    void rotate(const glm::vec3& axis, float angle);
+    void translate(const glm::dvec3& translation);
+    void rotate(const glm::dvec3& axis, double angle);
 
-    glm::mat4 matrix() const { return _matrix; }
-    glm::mat4& matrix() { return _matrix; }
+    glm::dmat4 matrix() const { return _matrix; }
+    glm::dmat4& matrix() { return _matrix; }
 
-    operator glm::mat4() const { return _matrix; }
+    operator glm::dmat4() const { return _matrix; }
 
 private:
-    glm::mat4 _matrix {1.0f};
+    glm::dmat4 _matrix {1.0f};
 };
