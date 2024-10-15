@@ -17,6 +17,9 @@ uniform mat4 u_model;
 out vec2 v_texcoord;
 
 vec3 hyperbolicProjection(vec4 point, int mode) {
+    // Doing this reduces floating point errors, for some reason
+    if(point.w < 1)
+        point.w = 1;
     if(mode == BELTRAMI) {
         return point.xyz / point.w;
     } else if(mode == POINCARE) {

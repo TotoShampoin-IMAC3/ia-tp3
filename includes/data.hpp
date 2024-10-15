@@ -24,7 +24,7 @@ struct ImugiData {
     HyperCamera& camera;
     glm::vec3& eye_offset;
     std::vector<char> rule_str = std::vector<char>(256, 0);
-    int nb_iter = 4;
+    int nb_iter = 6;
     float angle = 0;
     float length = 0;
 

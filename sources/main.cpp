@@ -54,8 +54,8 @@ int main(int argc, const char* argv[]) {
     const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
     const float distance = tileDistance(squares_at_a_vertex);
 
-    auto path = LSystemRule("F[+F][&F]F[-F][^F]F", 45.f, .025f);
-    auto hyper_tree = path.generateHyperbolic(4);
+    auto path = LSystemRule("F[+F][&F][-F][^F]F", 45.f, .025f);
+    auto hyper_tree = path.generateHyperbolic(6);
     auto hyper_tree_mesh = HyperMesh(hyper_tree.vertices, hyper_tree.indices, GL_LINES);
 
     auto hyper_plane = plane(size, size, squares_at_a_vertex);
