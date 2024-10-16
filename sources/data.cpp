@@ -122,17 +122,23 @@ void renderImgui(toto::Window& window, ImugiData& data) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     ImGui::Begin("LSystem");
-    ImGui::InputText("Path", data.rule_str.data(), data.rule_str.size());
+    ImGui::InputText("Axiom", data.axiom_str.data(), data.axiom_str.size());
+    ImGui::InputTextMultiline("Rules", data.rules_str.data(), data.rules_str.size());
     ImGui::InputInt("Iterations", &data.nb_iter);
     ImGui::InputFloat("Angle", &data.angle);
     ImGui::InputFloat("Length", &data.length);
     if (ImGui::Button("Regenerate")) {
-        data.rule.path() =
-            std::string(data.rule_str.begin(), std::find(data.rule_str.begin(), data.rule_str.end(), '\0'));
-        data.rule.angle() = data.angle;
-        data.rule.length() = data.length;
+        // data.rule.path() =
+        //     std::string(data.axiom_str.begin(), std::find(data.axiom_str.begin(), data.axiom_str.end(), '\0'));
+        // data.rule.angle() = data.angle;
+        // data.rule.length() = data.length;
+        // auto model = data.rule.generateHyperbolic(data.nb_iter);
+        // data.hyper_tree.set(model.vertices, model.indices);
 
-        auto model = data.rule.generateHyperbolic(data.nb_iter);
+        data.rule.axiom = tostring(data.axiom_str);
+        data.rule.setRules(data.rule.axiom, tostring(data.rules_str));
+        data.rule.angle = data.angle;
+        auto model = data.rule.generate(data.length, data.nb_iter);
         data.hyper_tree.set(model.vertices, model.indices);
     }
     ImGui::Text("");

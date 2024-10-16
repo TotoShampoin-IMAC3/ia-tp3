@@ -4,6 +4,7 @@
 #include "HyperRenderer.hpp"
 #include "HyperTransform.hpp"
 #include "LSystem.hpp"
+#include "LSystem2.hpp"
 #include "data.hpp"
 #include "misc.hpp"
 #include "shapes.hpp"
@@ -54,8 +55,10 @@ int main(int argc, const char* argv[]) {
     const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
     const float distance = tileDistance(squares_at_a_vertex);
 
-    auto path = LSystemRule("F[+F][&F][-F][^F]F", 45.f, .025f);
-    auto hyper_tree = path.generateHyperbolic(6);
+    // auto path = LSystemRule("F[+F][&F][-F][^F]F", 45.f, .025f);
+    // auto hyper_tree = path.generateHyperbolic(6);
+    auto path = LSystem("F", "F=FF+[+F-F-F]-[-F+F+F]", 25.f);
+    auto hyper_tree = path.generate(.025f, 4);
     auto hyper_tree_mesh = HyperMesh(hyper_tree.vertices, hyper_tree.indices, GL_LINES);
 
     auto hyper_plane = plane(size, size, squares_at_a_vertex);
@@ -103,6 +106,7 @@ int main(int argc, const char* argv[]) {
     handleCallbacks(window, callback_data);
 
     ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset()};
+    imgui_data.rules_str = tochar("F=FF+[+F-F-F]-[-F+F+F]");
     imgui_data.extractRule();
     initImgui(window);
 
