@@ -3,6 +3,7 @@
 #include "HyperMesh.hpp"
 #include <map>
 #include <string>
+#include <vector>
 
 struct LSystem {
     LSystem() = default;
@@ -18,6 +19,7 @@ struct LSystem {
 
     std::string axiom;
     std::map<char, std::string> rules;
+    std::vector<char> nodraw;
     float angle;
 
 private:

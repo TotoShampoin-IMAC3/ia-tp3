@@ -8,6 +8,12 @@
 
 void handleCallbacks(toto::Window& window, CallbackData& callback_data) {
     glfwSetWindowUserPointer(window.handle(), &callback_data);
+    glfwSetWindowSizeCallback(window.handle(), [](GLFWwindow* window, int width, int height) {
+        auto callback_data = static_cast<CallbackData*>(glfwGetWindowUserPointer(window));
+        float aspect = static_cast<float>(width) / static_cast<float>(height);
+        glViewport(0, 0, width, height);
+        callback_data->camera.setPerspective(glm::radians(90.0f), aspect, 0.01f, 100.0f);
+    });
     glfwSetKeyCallback(window.handle(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
         auto callback_data = static_cast<CallbackData*>(glfwGetWindowUserPointer(window));
         bool& left = callback_data->left;
@@ -118,29 +124,34 @@ void initImgui(toto::Window& window) {
 }
 
 void renderImgui(toto::Window& window, ImugiData& data) {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::Begin("LSystem");
-    ImGui::InputText("Axiom", data.axiom_str.data(), data.axiom_str.size());
-    ImGui::InputTextMultiline("Rules", data.rules_str.data(), data.rules_str.size());
-    ImGui::InputInt("Iterations", &data.nb_iter);
-    ImGui::InputFloat("Angle", &data.angle);
-    ImGui::InputFloat("Length", &data.length);
-    if (ImGui::Button("Regenerate")) {
-        // data.rule.path() =
-        //     std::string(data.axiom_str.begin(), std::find(data.axiom_str.begin(), data.axiom_str.end(), '\0'));
-        // data.rule.angle() = data.angle;
-        // data.rule.length() = data.length;
-        // auto model = data.rule.generateHyperbolic(data.nb_iter);
-        // data.hyper_tree.set(model.vertices, model.indices);
-
+    static auto regen = [&] {
         data.rule.axiom = tostring(data.axiom_str);
+        data.rule.nodraw = std::vector<char>(data.nodraw_str.begin(), data.nodraw_str.end());
         data.rule.setRules(data.rule.axiom, tostring(data.rules_str));
         data.rule.angle = data.angle;
         auto model = data.rule.generate(data.length, data.nb_iter);
         data.hyper_tree.set(model.vertices, model.indices);
+    };
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("LSystem");
+    bool changed = false;
+    changed |= ImGui::InputText("Axiom", data.axiom_str.data(), data.axiom_str.size());
+    changed |= ImGui::InputTextMultiline("Rules", data.rules_str.data(), data.rules_str.size());
+    changed |= ImGui::InputText("No Draw", data.nodraw_str.data(), data.nodraw_str.size());
+    changed |= ImGui::InputInt("Iterations", &data.nb_iter);
+    changed |= ImGui::InputFloat("Angle", &data.angle);
+    changed |= ImGui::InputFloat("Length", &data.length);
+    if (changed && data.live_gen) {
+        regen();
     }
+    if (ImGui::Button("Regenerate")) {
+        regen();
+    }
+    ImGui::SameLine();
+    ImGui::Checkbox("Live Generation", &data.live_gen);
     ImGui::Text("");
     ImGui::Checkbox("Use Outside Camera", &data.outside_cam);
     ImGui::InputFloat3("Eye Offset", &data.eye_offset.x);

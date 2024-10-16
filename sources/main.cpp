@@ -3,7 +3,6 @@
 #include "HyperMesh.hpp"
 #include "HyperRenderer.hpp"
 #include "HyperTransform.hpp"
-#include "LSystem.hpp"
 #include "LSystem2.hpp"
 #include "data.hpp"
 #include "misc.hpp"
@@ -102,17 +101,19 @@ int main(int argc, const char* argv[]) {
     bool locked = false;
     bool outside_cam = false;
 
-    auto callback_data = CallbackData {velocity, locked};
+    auto callback_data = CallbackData {velocity, locked, euclidean_camera};
     handleCallbacks(window, callback_data);
 
     ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset()};
-    imgui_data.rules_str = tochar("F=FF+[+F-F-F]-[-F+F+F]");
+    imgui_data.rules_str = tochar("F=FF+[+F-F-F]-[-F+F+F]", 512);
+    imgui_data.nodraw_str = tochar("", 256);
     imgui_data.extractRule();
     initImgui(window);
 
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_NONE);
     glLineWidth(2);
+    glDepthFunc(GL_LEQUAL);
 
     auto start = glfwGetTime();
     auto last = start;

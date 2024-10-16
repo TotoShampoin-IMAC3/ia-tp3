@@ -54,8 +54,10 @@ LSystem::Path LSystem::generatePath(const float& length, const int& N) {
     for (const auto& c : path) {
         switch (c) {
         default: {
-            turtle.translate(glm::dvec3(0, 0, length));
-            placeVertex();
+            if (std::find(nodraw.begin(), nodraw.end(), c) == nodraw.end()) {
+                turtle.translate(glm::dvec3(0, 0, length));
+                placeVertex();
+            }
         } break;
         case '+': turtle.rotate(glm::dvec3(1, 0, 0), glm::radians(angle)); break;
         case '-': turtle.rotate(glm::dvec3(1, 0, 0), glm::radians(-angle)); break;
