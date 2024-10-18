@@ -93,11 +93,12 @@ int main(int argc, const char* argv[]) {
     bool locked = false;
     bool outside_cam = false;
     bool hide_floor = false;
+    bool multi_trees = false;
 
     auto callback_data = CallbackData {velocity, locked, euclidean_camera};
     handleCallbacks(window, callback_data);
 
-    ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset(), hide_floor};
+    ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset(), hide_floor, multi_trees};
     imgui_data.rules_str = tochar("F=FF+[+F-F-F]-[-F+F+F]", 512);
     imgui_data.nodraw_str = tochar("", 256);
     imgui_data.extractRule();
@@ -143,7 +144,7 @@ int main(int argc, const char* argv[]) {
 
         renderer.clear();
         if (!hide_floor) {
-            renderer.setColor(glm::vec3(.25f));
+            renderer.setColor(glm::vec3(.5f));
             renderer.setTexture(grass);
             for (auto& transform : grid) {
                 renderer.render(hyper_mesh, transform);
@@ -151,8 +152,14 @@ int main(int argc, const char* argv[]) {
         }
 
         renderer.setTexture(std::nullopt);
-        renderer.setColor(glm::vec3(1.f));
-        renderer.render(hyper_tree_mesh, HyperTransform());
+        renderer.setColor(glm::vec3(0, .5, 0));
+        if (multi_trees) {
+            for (auto& transform : grid) {
+                renderer.render(hyper_tree_mesh, transform);
+            }
+        } else {
+            renderer.render(hyper_tree_mesh, HyperTransform());
+        }
 
         renderImgui(window, imgui_data);
 

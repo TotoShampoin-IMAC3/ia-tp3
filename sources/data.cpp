@@ -132,6 +132,7 @@ void renderImgui(toto::Window& window, ImugiData& data) {
         auto model = data.rule.generate(data.length, data.nb_iter);
         data.hyper_tree.set(model.vertices, model.indices);
     };
+    float log_length = glm::log(data.length * 100 + 1);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -142,8 +143,13 @@ void renderImgui(toto::Window& window, ImugiData& data) {
     changed |= ImGui::InputTextMultiline("Rules", data.rules_str.data(), data.rules_str.size());
     changed |= ImGui::InputText("No Draw", data.nodraw_str.data(), data.nodraw_str.size());
     changed |= ImGui::InputInt("Iterations", &data.nb_iter);
-    changed |= ImGui::InputFloat("Angle", &data.angle);
-    changed |= ImGui::InputFloat("Length", &data.length);
+    changed |= ImGui::InputFloat("Angle##angle-input", &data.angle);
+    changed |= ImGui::SliderFloat("##angle-slider", &data.angle, 0, 180);
+    changed |= ImGui::InputFloat("Length##length-input", &data.length);
+    if (ImGui::SliderFloat("##length-slider", &log_length, 0.f, 5.f)) {
+        changed |= true;
+        data.length = glm::exp(log_length) / 100 - 0.01;
+    }
     if (changed && data.live_gen) {
         regen();
     }
@@ -156,6 +162,7 @@ void renderImgui(toto::Window& window, ImugiData& data) {
     ImGui::Checkbox("Use Outside Camera", &data.outside_cam);
     ImGui::InputFloat3("Eye Offset", &data.eye_offset.x);
     ImGui::Checkbox("Hide Floor", &data.hide_floor);
+    ImGui::Checkbox("Multiple Trees", &data.multiple_trees);
     if (ImGui::Button("Reset Position")) {
         data.camera.transform() = HyperTransform();
     }
