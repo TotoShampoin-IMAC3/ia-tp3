@@ -59,12 +59,12 @@ LSystem::Path LSystem::generatePath(const float& length, const int& N) {
                 placeVertex();
             }
         } break;
-        case '+': turtle.rotate(glm::dvec3(1, 0, 0), glm::radians(angle)); break;
-        case '-': turtle.rotate(glm::dvec3(1, 0, 0), glm::radians(-angle)); break;
-        case '&': turtle.rotate(glm::dvec3(0, 1, 0), glm::radians(angle)); break;
-        case '^': turtle.rotate(glm::dvec3(0, 1, 0), glm::radians(-angle)); break;
-        case '<': turtle.rotate(glm::dvec3(0, 0, 1), glm::radians(angle)); break;
-        case '>': turtle.rotate(glm::dvec3(0, 0, 1), glm::radians(-angle)); break;
+        case '+': turtle.rotate(glm::dvec3(1, 0, 0), glm::radians(-angle)); break;
+        case '-': turtle.rotate(glm::dvec3(1, 0, 0), glm::radians(angle)); break;
+        case '&': turtle.rotate(glm::dvec3(0, 1, 0), glm::radians(-angle)); break;
+        case '^': turtle.rotate(glm::dvec3(0, 1, 0), glm::radians(angle)); break;
+        case '<': turtle.rotate(glm::dvec3(0, 0, 1), glm::radians(-angle)); break;
+        case '>': turtle.rotate(glm::dvec3(0, 0, 1), glm::radians(angle)); break;
         case '|': turtle.rotate(glm::dvec3(0, 0, 1), glm::radians(180.0f)); break;
         case '[': stack.push({turtle, current_vertex}); break;
         case ']': {

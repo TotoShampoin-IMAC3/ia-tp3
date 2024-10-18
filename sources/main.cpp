@@ -7,17 +7,16 @@
 #include "data.hpp"
 #include "misc.hpp"
 #include "shapes.hpp"
-#include "toto-engine/import-gl.hpp"
-#include "toto-engine/loader/image.hpp"
-#include "toto-engine/utils/camera.hpp"
-#include <GL/gl.h>
+
 #include <GLFW/glfw3.h>
-#include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <random>
 #include <toto-engine/gl/glresources.hpp>
+#include <toto-engine/import-gl.hpp>
+#include <toto-engine/loader/image.hpp>
 #include <toto-engine/mesh.hpp>
 #include <toto-engine/uniform.hpp>
+#include <toto-engine/utils/camera.hpp>
 #include <toto-engine/window.hpp>
 #include <vector>
 
@@ -54,8 +53,6 @@ int main(int argc, const char* argv[]) {
     const float size = tileSizeEucl(squares_at_a_vertex) * 2.;
     const float distance = tileDistance(squares_at_a_vertex);
 
-    // auto path = LSystemRule("F[+F][&F][-F][^F]F", 45.f, .025f);
-    // auto hyper_tree = path.generateHyperbolic(6);
     auto path = LSystem("F", "F=FF+[+F-F-F]-[-F+F+F]", 25.f);
     auto hyper_tree = path.generate(.025f, 4);
     auto hyper_tree_mesh = HyperMesh(hyper_tree.vertices, hyper_tree.indices, GL_LINES);
@@ -69,14 +66,9 @@ int main(int argc, const char* argv[]) {
     auto renderer = HyperRenderer();
     auto euclidean_camera = toto::Camera::Perspective(glm::radians(90.0f), aspect, 0.01f, 100.0f);
 
-    /* Immersive */
     euclidean_camera.transform().position() = glm::vec3(0.0f, 0.0f, 0.0f);
     euclidean_camera.transform().lookAt(glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     auto camera = HyperCamera(HyperbolicProjection::BeltramiKlein);
-    // /* Outside */
-    // euclidean_camera.transform().position() = glm::vec3(0, 0, 1);
-    // euclidean_camera.transform().lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    // auto camera = HyperCamera(HyperbolicProjection::PoincareDisk);
 
     camera.eyeOffset() = glm::vec3(0.0f, 0.0f, .15f);
 
@@ -100,11 +92,12 @@ int main(int argc, const char* argv[]) {
     glm::vec3 velocity(0.0f);
     bool locked = false;
     bool outside_cam = false;
+    bool hide_floor = false;
 
     auto callback_data = CallbackData {velocity, locked, euclidean_camera};
     handleCallbacks(window, callback_data);
 
-    ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset()};
+    ImugiData imgui_data {path, hyper_tree_mesh, outside_cam, camera, camera.eyeOffset(), hide_floor};
     imgui_data.rules_str = tochar("F=FF+[+F-F-F]-[-F+F+F]", 512);
     imgui_data.nodraw_str = tochar("", 256);
     imgui_data.extractRule();
@@ -149,10 +142,12 @@ int main(int argc, const char* argv[]) {
         renderer.setCamera(camera);
 
         renderer.clear();
-        renderer.setColor(glm::vec3(.25f));
-        renderer.setTexture(grass);
-        for (auto& transform : grid) {
-            renderer.render(hyper_mesh, transform);
+        if (!hide_floor) {
+            renderer.setColor(glm::vec3(.25f));
+            renderer.setTexture(grass);
+            for (auto& transform : grid) {
+                renderer.render(hyper_mesh, transform);
+            }
         }
 
         renderer.setTexture(std::nullopt);

@@ -3,6 +3,9 @@
 #include "HyperMesh.hpp"
 #include <string>
 
+// This is a first attempt.
+// It doesn't support axioms.
+
 class LSystemRule {
 public:
     LSystemRule() = default;

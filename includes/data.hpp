@@ -25,6 +25,7 @@ struct ImugiData {
     bool& outside_cam;
     HyperCamera& camera;
     glm::vec3& eye_offset;
+    bool& hide_floor;
     std::vector<char> axiom_str = std::vector<char>(256, 0);
     std::vector<char> rules_str = std::vector<char>(512, 0);
     std::vector<char> nodraw_str = std::vector<char>(256, 0);
